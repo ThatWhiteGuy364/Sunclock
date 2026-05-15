@@ -250,6 +250,7 @@
             w: random(120, 220),
             h: random(40, 70),
             sp: random(0.15, 0.35),
+            basePerlin: random(1000), // Base perlin seed for this cloud
           });
       }
 
@@ -466,9 +467,31 @@ numbers[5].number = Math.floor(onesDigit / 2) * 2 + 1;
       function drawC(hb) {
         noStroke();
         let ct = lerpColor(color(255, 255, 255, 45), hb, 0.4);
+        
+        // 25% chance every 5 seconds to add a new cloud
+        if (frameCount % 300 === 0 && random(1) < 0.25) {
+          let st = 100;
+          let sh = height - st;
+          clouds.push({
+            x: random(-100, width),
+            y: random(st + 10, st + sh * 0.25),
+            w: random(120, 220),
+            h: random(40, 70),
+            sp: random(0.15, 0.35),
+            basePerlin: random(1000),
+          });
+        }
+        
         for (let i = 0; i < clouds.length; i++) {
           let c = clouds[i];
-          c.x += c.sp;
+          // Base perlin noise (foundation speed)
+          let basePerlinSpeed = (noise(c.basePerlin) - 0.5) * 0.2;
+          // Sine variation while drifting
+          let sineVariation = sin(frameCount * 0.005 + i) * 0.08;
+          // Light perlin on top
+          let lightPerlin = (noise(frameCount * 0.001 + i) - 0.5) * 0.04;
+          
+          c.x += c.sp + basePerlinSpeed + sineVariation + lightPerlin;
           if (c.x > width + 100) c.x = -150;
           fill(ct);
           ellipse(c.x, c.y, c.w, c.h);
