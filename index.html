@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Clock! -By ThatWhiteGuy364</title>
     <script src="https://cdn.jsdelivr.net/npm/p5@2/lib/p5.min.js"></script>
-    <!-- <script src="https://unpkg.com/openmeteo@latest/lib/index.js"></script> -->
     <style>
       html,
       body {
@@ -60,21 +59,18 @@
       Town:<input id="twn" value="Lead, SD" />Lat:<input
         id="lat"
         value="44.3522"
-      />Lng:<input id="lng" value="103.7652" /><button onclick="saveCfg()">
+      />Lng:<input id="lng" value="-103.7652" /><button onclick="saveCfg()">
         Apply
       </button>
     </div>
     <script>
-      // Fallback configuration
       const FALLBACK_LAT = 44.3522;
       const FALLBACK_LNG = -103.7652;
       let PRESET_TOWN = "Lead, SD";
 
-      // Global coordinates
-      let LAT;
-      let LNG;
+      let LAT = FALLBACK_LAT;
+      let LNG = FALLBACK_LNG;
 
-      // UI State variables
       let T_CURR = "Loading...";
       let W_CURR = "Clear";
       let W_PREV = "Clear";
@@ -84,14 +80,12 @@
       let W_SS = "18:00";
       let W_TRANS = 1;
 
-      // Animation and visual arrays
       let numbers = [];
       let borders = [];
       let stars = [];
       let clouds = [];
       let parts = [];
 
-      // Configuration constraints
       let numS = 60;
       let numC = 4;
       let maxP = 80;
@@ -100,54 +94,42 @@
       let fS = 0;
       let cfgO = 0;
 
-      // Geolocation fetcher
-      const fetchLocationData = () => {
-        return new Promise((resolve) => {
-          if (!navigator.geolocation) {
+      const fetchLocationData = () =>
+        new Promise((resolve) => {
+          if (!navigator.geolocation)
             return resolve({ lat: FALLBACK_LAT, lng: FALLBACK_LNG });
-          }
           navigator.geolocation.getCurrentPosition(
             (pos) =>
               resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
             () => resolve({ lat: FALLBACK_LAT, lng: FALLBACK_LNG }),
           );
         });
-      };
 
-      // Reverse geocoding fetcher
       async function updateTownName(lat, lng) {
         try {
-          const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`;
-          const response = await fetch(url);
-          const data = await response.json();
-
-          const city =
-            data.city || data.locality || data.principalSubdivision || "";
-          const state = data.principalSubdivisionCode
-            ? data.principalSubdivisionCode.split("-")[1]
+          const r = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`,
+          );
+          const d = await r.json();
+          const city = d.city || d.locality || d.principalSubdivision || "";
+          const state = d.principalSubdivisionCode
+            ? d.principalSubdivisionCode.split("-")[1]
             : "";
-
-          if (city && state) {
-            PRESET_TOWN = `${city}, ${state}`;
-          } else if (city) {
-            PRESET_TOWN = city;
-          }
-        } catch (error) {
-          console.error("Failed to fetch town name:", error);
+          if (city && state) PRESET_TOWN = `${city}, ${state}`;
+          else if (city) PRESET_TOWN = city;
+        } catch (e) {
+          console.error("Geocode failed:", e);
         }
       }
 
-      // Application entry point
       async function startApp() {
-        const currentCoordinates = await fetchLocationData();
-        LAT = currentCoordinates.lat;
-        LNG = currentCoordinates.lng;
-
-        // Update town variable using API
+        const coords = await fetchLocationData();
+        LAT = coords.lat;
+        LNG = coords.lng;
         await updateTownName(LAT, LNG);
+        fetchW();
       }
 
-      // Execute application
       startApp();
 
       var numbersArray = [
@@ -209,6 +191,7 @@
           [60, 100, 0, 100],
         ],
       ];
+
       function setup() {
         createCanvas(windowWidth, windowHeight);
         cColor = color(255);
@@ -216,6 +199,7 @@
         fetchW();
         setInterval(fetchW, 300000);
       }
+
       function initL() {
         let tw = 505,
           th = 100,
@@ -233,44 +217,20 @@
         ];
         borders = [
           new LerpLine(
-            cX - 25,
-            cY - 30,
-            cX - 25,
-            cY + 130,
-            cX - 25,
-            cY - 30,
-            cX - 25,
-            cY + 130,
+            cX - 25, cY - 30, cX - 25, cY + 130,
+            cX - 25, cY - 30, cX - 25, cY + 130,
           ),
           new LerpLine(
-            cX + 530,
-            cY - 30,
-            cX + 530,
-            cY + 130,
-            cX + 530,
-            cY - 30,
-            cX + 530,
-            cY + 130,
+            cX + 530, cY - 30, cX + 530, cY + 130,
+            cX + 530, cY - 30, cX + 530, cY + 130,
           ),
           new LerpLine(
-            cX - 25,
-            cY - 30,
-            cX + 530,
-            cY - 30,
-            cX - 25,
-            cY - 30,
-            cX + 530,
-            cY - 30,
+            cX - 25, cY - 30, cX + 530, cY - 30,
+            cX - 25, cY - 30, cX + 530, cY - 30,
           ),
           new LerpLine(
-            cX - 25,
-            cY + 130,
-            cX + 530,
-            cY + 130,
-            cX - 25,
-            cY + 130,
-            cX + 530,
-            cY + 130,
+            cX - 25, cY + 130, cX + 530, cY + 130,
+            cX - 25, cY + 130, cX + 530, cY + 130,
           ),
         ];
         stars = [];
@@ -292,42 +252,62 @@
             sp: random(0.15, 0.35),
           });
       }
+
       function windowResized() {
         resizeCanvas(windowWidth, windowHeight);
         initL();
       }
+
       function fetchW() {
-        let u = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LNG}&daily=sunset,sunrise&current=temperature_2m,relative_humidity_2m,wind_speed_10m&models=best_match&timezone=auto&forecast_days=1`;
-        loadJSON(u, parseW, () => (T_CURR = "Offline"));
+        const u =
+          `https://api.open-meteo.com/v1/forecast` +
+          `?latitude=${LAT}&longitude=${LNG}` +
+          `&daily=sunrise,sunset` +
+          `&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code` +
+          `&models=best_match&timezone=auto&forecast_days=1` +
+          `&temperature_unit=fahrenheit&wind_speed_unit=mph`;
+        fetch(u)
+          .then((r) => {
+            if (!r.ok) throw new Error(r.status);
+            return r.json();
+          })
+          .then((d) => parseW(d))
+          .catch(() => {
+            T_CURR = "Offline";
+          });
       }
+
       function parseW(d) {
-        if (d && d.current) {
-          T_CURR = Math.round(d.current.temperature_2m) + "°F";
-          W_WIND = Math.round(d.current.wind_speed_10m) + " mph";
-          W_HUM = d.current.relative_humidity_2m + "%";
-          W_PREV = W_CURR;
-          let c = d.current.weather_code;
-          W_CURR =
-            (c >= 51 && c <= 67) || (c >= 80 && c <= 82) || c > 94
-              ? "Rainy"
-              : (c >= 71 && c <= 77) || (c >= 85 && c <= 86)
-                ? "Snowy"
-                : "Clear";
-          if (W_PREV !== W_CURR) W_TRANS = 0;
-          if (d.daily) {
-            W_SR = d.daily.sunrise[0].split("T")[1];
-            W_SS = d.daily.sunset[0].split("T")[1];
-          }
+        if (!d || !d.current) return;
+        T_CURR = Math.round(d.current.temperature_2m) + "°F";
+        W_WIND = Math.round(d.current.wind_speed_10m) + " mph";
+        W_HUM = d.current.relative_humidity_2m + "%";
+        W_PREV = W_CURR;
+        const c = d.current.weather_code;
+        const next =
+          (c >= 51 && c <= 67) || (c >= 80 && c <= 82) || c > 94
+            ? "Rainy"
+            : (c >= 71 && c <= 77) || (c >= 85 && c <= 86)
+              ? "Snowy"
+              : "Clear";
+        if (W_PREV !== next) W_TRANS = 0;
+        W_CURR = next;
+        if (d.daily && d.daily.sunrise && d.daily.sunset) {
+          W_SR = d.daily.sunrise[0].split("T")[1].slice(0, 5);
+          W_SS = d.daily.sunset[0].split("T")[1].slice(0, 5);
         }
       }
+
       function draw() {
         let th =
           mouseIsPressed && mouseY > 100
             ? map(mouseX, 0, width, 0, 23.99, true)
             : hour() + minute() / 60 + second() / 3600;
-        if (W_TRANS < 1) W_TRANS += 0.0011;
+        if (W_TRANS < 1) W_TRANS = min(W_TRANS + 0.0011, 1);
         let sState = getSky(th);
         drawGrad(sState.t, sState.b);
+        if (sState.srGlow > 0) drawSideGlow(sState.srGlow, true, 255, 145, 60);
+        if (sState.ssGlow > 0) drawSideGlow(sState.ssGlow, false, 240, 100, 40);
         if (sState.sa > 0) drawS(sState.sa);
         drawCB(th);
         drawC(sState.b);
@@ -360,6 +340,7 @@
         drawingContext.shadowBlur = 0;
         drawHUD(th);
       }
+
       function getSky(h) {
         let nt = color(6, 10, 22),
           nb = color(18, 22, 42),
@@ -371,7 +352,9 @@
           ssb = color(240, 100, 40),
           t,
           b,
-          sa = 0;
+          sa = 0,
+          srGlow = 0,
+          ssGlow = 0;
         if (h < 5) {
           t = nt;
           b = nb;
@@ -385,6 +368,7 @@
           cColor = lerpColor(color(255), color(35, 30, 50), p);
           cWeight = map(p, 0, 1, 4.5, 3.5);
           sa = map(h, 5, 6, 255, 0, true);
+          srGlow = sin(map(h, 5, 7, 0, PI));
         } else if (h < 8.5) {
           let p = map(h, 7, 8.5, 0, 1);
           t = lerpColor(srt, dt, p);
@@ -402,6 +386,7 @@
           b = lerpColor(db, ssb, p);
           cColor = lerpColor(color(25, 35, 55), color(255, 245, 215), p);
           cWeight = map(p, 0, 1, 3.5, 4.5);
+          ssGlow = sin(map(h, 17.5, 19.5, 0, PI));
         } else if (h < 21) {
           let p = map(h, 19.5, 21, 0, 1);
           t = lerpColor(sst, nt, p);
@@ -416,16 +401,31 @@
           cWeight = 4.5;
           sa = 255;
         }
-        return { t: t, b: b, sa: sa };
+        return { t, b, sa, srGlow, ssGlow };
       }
+
       function drawGrad(c1, c2) {
         noFill();
         for (let y = 100; y <= height; y++) {
           let inter = map(y, 100, height, 0, 1);
           let c = lerpColor(c1, c2, inter);
           stroke(c);
-          line(0, y, width, y); // Flat horizontal gradient line
+          line(0, y, width, y);
         }
+      }
+
+      function drawSideGlow(progress, fromLeft, r, g, b) {
+        let ctx = drawingContext;
+        let a = (progress * 0.65).toFixed(4);
+        let grd = fromLeft
+          ? ctx.createLinearGradient(0, 0, width * 0.65, 0)
+          : ctx.createLinearGradient(width, 0, width * 0.35, 0);
+        grd.addColorStop(0, `rgba(${r},${g},${b},${a})`);
+        grd.addColorStop(1, `rgba(${r},${g},${b},0)`);
+        ctx.save();
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, 100, width, height - 100);
+        ctx.restore();
       }
 
       function drawS(ma) {
@@ -438,6 +438,7 @@
           ellipse(s.x, s.y, s.s, s.s);
         }
       }
+
       function drawCB(h) {
         let id = h >= 6 && h < 18,
           ap = id
@@ -460,6 +461,7 @@
           ellipse(cx + 12, cy - 4, 42, 42);
         }
       }
+
       function drawC(hb) {
         noStroke();
         let ct = lerpColor(color(255, 255, 255, 45), hb, 0.4);
@@ -472,6 +474,7 @@
           ellipse(c.x + c.w * 0.2, c.y - c.h * 0.25, c.w * 0.75, c.h * 0.9);
         }
       }
+
       function drawW() {
         let activeW =
           W_TRANS < 1 ? (random(1) < W_TRANS ? W_CURR : W_PREV) : W_CURR;
@@ -502,6 +505,7 @@
           if (p.y > height) parts.splice(i, 1);
         }
       }
+
       function drawHUD(h) {
         fill(12, 16, 28);
         noStroke();
@@ -562,6 +566,7 @@
           text("[CLICK AND DRAG CANVAS TO SIMULATE ORBIT]", width / 2, 78);
         }
       }
+
       function mousePressed() {
         if (mouseX > width - 50 && mouseY < 95) {
           let fs = fullscreen();
@@ -574,6 +579,7 @@
             : "none";
         }
       }
+
       function saveCfg() {
         PRESET_TOWN = document.getElementById("twn").value;
         LAT = parseFloat(document.getElementById("lat").value);
@@ -582,6 +588,7 @@
         document.getElementById("cfg").style.display = "none";
         fetchW();
       }
+
       function LerpLine(x1, y1, x2, y2, nx1, ny1, nx2, ny2) {
         this.x1 = x1;
         this.y1 = y1;
@@ -594,6 +601,7 @@
         this.d1 = false;
         this.d2 = false;
       }
+
       LerpLine.prototype.draw = function () {
         push();
         stroke(cColor);
@@ -617,12 +625,14 @@
         }
         pop();
       };
+
       function showNumber(x, y, n) {
         this.x = x;
         this.y = y;
         this.number = n;
         this.lA = [];
       }
+
       showNumber.prototype.draw = function () {
         push();
         translate(this.x, this.y);
