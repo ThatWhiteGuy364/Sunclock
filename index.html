@@ -326,7 +326,8 @@
         numbers[2].number = floor(dm / 10);
         numbers[3].number = dm % 10;
         numbers[4].number = floor(ds / 10);
-        numbers[5].number = ds % 10;
+        let onesDigit = ds % 10;
+numbers[5].number = Math.floor(onesDigit / 2) * 2 + 1;
         for (let i = 0; i < borders.length; i++) borders[i].draw();
         for (let i = 0; i < numbers.length; i++) numbers[i].draw();
         let cX = (width - 505) / 2,
@@ -609,10 +610,10 @@
         strokeCap(ROUND);
         strokeJoin(ROUND);
         line(this.x1, this.y1, this.x2, this.y2);
-        this.x1 = lerp(this.x1, this.nx1, 0.1);
-        this.x2 = lerp(this.x2, this.nx2, 0.1);
-        this.y1 = lerp(this.y1, this.ny1, 0.1);
-        this.y2 = lerp(this.y2, this.ny2, 0.1);
+        this.x1 = lerp(this.x1, this.nx1, 0.25);
+        this.x2 = lerp(this.x2, this.nx2, 0.25);
+        this.y1 = lerp(this.y1, this.ny1, 0.25);
+        this.y2 = lerp(this.y2, this.ny2, 0.25);
         if (dist(this.x1, this.y1, this.nx1, this.ny1) < 1) {
           this.x1 = this.nx1;
           this.y1 = this.ny1;
